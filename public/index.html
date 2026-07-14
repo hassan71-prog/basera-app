@@ -1,0 +1,1987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Basera — Rooms, Hostels & Homes on Rent</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+  :root{
+    --navy:#12213E;
+    --navy-deep:#0B1730;
+    --coral:#FF6B5E;
+    --teal:#3FBFB0;
+    --gold:#FFC65C;
+    --cream:#FFF9F1;
+    --ink:#16181D;
+    --line:rgba(18,33,62,0.12);
+    --radius:18px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:'Sora',sans-serif;
+    color:var(--ink);
+    background:var(--cream);
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  h1,h2,h3,.display{
+    font-family:'Fraunces',serif;
+    letter-spacing:-0.01em;
+  }
+  a{color:inherit;text-decoration:none;}
+  img{max-width:100%;display:block;}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 28px;}
+  .eyebrow{
+    text-transform:uppercase;
+    font-size:12.5px;
+    letter-spacing:0.14em;
+    font-weight:700;
+    color:var(--coral);
+  }
+
+  /* ---------- Header ---------- */
+  header{
+    position:sticky;top:0;z-index:50;
+    background:rgba(255,249,241,0.85);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid transparent;
+    transition:border-color .3s ease, box-shadow .3s ease;
+  }
+  header.scrolled{
+    border-color:var(--line);
+    box-shadow:0 6px 24px rgba(18,33,62,0.06);
+  }
+  nav{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:18px 0;
+  }
+  .logo{
+    font-family:'Fraunces',serif;
+    font-weight:800;
+    font-size:24px;
+    display:flex;align-items:center;gap:8px;
+    color:var(--navy);
+  }
+  .logo .dot{
+    width:9px;height:9px;border-radius:50%;
+    background:var(--coral);
+    display:inline-block;
+    transform:translateY(-2px);
+  }
+  .nav-links{
+    display:flex;gap:34px;font-size:15px;font-weight:600;color:var(--navy);
+  }
+  .nav-links a{
+    position:relative;padding:4px 0;
+  }
+  .nav-links a::after{
+    content:'';position:absolute;left:0;bottom:0;width:0;height:2px;
+    background:var(--coral);transition:width .25s ease;
+  }
+  .nav-links a:hover::after{width:100%;}
+  .nav-actions{display:flex;align-items:center;gap:18px;}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;
+    padding:12px 24px;border-radius:100px;
+    font-weight:700;font-size:14.5px;
+    cursor:pointer;border:none;
+    transition:transform .2s ease, box-shadow .2s ease, background .2s ease;
+  }
+  .btn-primary{
+    background:var(--coral);color:#fff;
+    box-shadow:0 8px 20px rgba(255,107,94,0.35);
+  }
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 26px rgba(255,107,94,0.45);}
+  .btn-ghost{
+    background:transparent;color:var(--navy);font-weight:600;
+  }
+  .menu-toggle{display:none;background:none;border:none;font-size:26px;color:var(--navy);cursor:pointer;}
+
+  /* ---------- Hero ---------- */
+  .hero{
+    position:relative;
+    padding:76px 0 40px;
+    overflow:hidden;
+  }
+  .hero .wrap{
+    display:grid;
+    grid-template-columns:1.05fr 0.95fr;
+    gap:50px;
+    align-items:center;
+  }
+  .hero h1{
+    font-size:clamp(38px,5vw,60px);
+    line-height:1.04;
+    color:var(--navy);
+    font-weight:700;
+  }
+  .hero h1 em{
+    font-style:italic;
+    color:var(--coral);
+  }
+  .hero p.lead{
+    margin-top:22px;
+    font-size:17.5px;
+    line-height:1.6;
+    color:#4A5066;
+    max-width:460px;
+  }
+
+  /* search card */
+  .search-card{
+    margin-top:34px;
+    background:#fff;
+    border-radius:var(--radius);
+    padding:10px;
+    box-shadow:0 20px 50px rgba(18,33,62,0.14);
+    display:grid;
+    grid-template-columns:1.3fr 1fr 1fr 0.9fr;
+    gap:6px;
+  }
+  .search-field{
+    padding:12px 16px;border-radius:12px;
+    transition:background .2s ease;
+  }
+  .search-field:hover{background:#FFF3EA;}
+  .search-field label{
+    display:block;font-size:11px;font-weight:700;text-transform:uppercase;
+    letter-spacing:.06em;color:#9096A6;margin-bottom:3px;
+  }
+  .search-field input, .search-field select{
+    border:none;outline:none;font-family:'Sora',sans-serif;
+    font-size:14.5px;font-weight:600;color:var(--navy);width:100%;background:transparent;
+  }
+  .search-card .btn-primary{
+    border-radius:12px;width:100%;font-size:15px;
+  }
+
+  .hero-stats{
+    display:flex;gap:34px;margin-top:30px;
+  }
+  .hero-stats div strong{
+    font-family:'Fraunces',serif;font-size:26px;color:var(--navy);display:block;
+  }
+  .hero-stats div span{font-size:13px;color:#6A7086;}
+
+  /* hero collage */
+  .collage{
+    position:relative;height:520px;
+  }
+  .collage img{
+    position:absolute;
+    border-radius:20px;
+    object-fit:cover;
+    box-shadow:0 20px 40px rgba(18,33,62,0.22);
+  }
+  .c1{width:62%;height:300px;top:0;right:0;}
+  .c2{width:48%;height:230px;bottom:0;left:0;border:6px solid var(--cream);}
+  .badge-float{
+    position:absolute;bottom:40px;right:24px;
+    background:var(--gold);
+    color:var(--navy-deep);
+    padding:14px 18px;border-radius:16px;
+    font-weight:700;font-size:14px;
+    box-shadow:0 12px 24px rgba(255,198,92,0.5);
+    display:flex;align-items:center;gap:8px;
+    transform:rotate(-3deg);
+  }
+
+  /* ---------- Categories ---------- */
+  .categories{padding:90px 0 40px;}
+  .section-head{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    margin-bottom:44px;gap:20px;flex-wrap:wrap;
+  }
+  .section-head h2{font-size:clamp(28px,3.4vw,38px);color:var(--navy);font-weight:600;}
+  .section-head p{color:#6A7086;max-width:380px;font-size:15px;line-height:1.55;}
+
+  .cat-grid{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:22px;
+  }
+  .cat-card{
+    border-radius:var(--radius);
+    padding:30px 26px;
+    position:relative;
+    overflow:hidden;
+    min-height:260px;
+    display:flex;flex-direction:column;justify-content:flex-end;
+    transition:transform .3s ease;
+  }
+  .cat-card:hover{transform:translateY(-6px);}
+  .cat-card::before{
+    content:'';position:absolute;inset:0;opacity:0.92;
+  }
+  .cat-card.rooms::before{background:linear-gradient(150deg,var(--navy),#22345C);}
+  .cat-card.hostels::before{background:linear-gradient(150deg,var(--coral),#E8503F);}
+  .cat-card.homes::before{background:linear-gradient(150deg,var(--teal),#2A9C8F);}
+  .cat-card *{position:relative;z-index:1;}
+  .cat-card h3{color:#fff;font-size:24px;font-weight:600;margin-bottom:8px;}
+  .cat-card p{color:rgba(255,255,255,0.82);font-size:14px;line-height:1.5;margin-bottom:14px;}
+  .cat-card .tag{
+    display:inline-block;font-size:12.5px;font-weight:700;
+    background:rgba(255,255,255,0.18);color:#fff;
+    padding:6px 14px;border-radius:100px;width:fit-content;
+  }
+
+  /* ---------- Listings ---------- */
+  .listings{padding:90px 0 40px;}
+  .listing-grid{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:26px;
+  }
+  .listing-card{
+    background:#fff;border-radius:var(--radius);
+    overflow:hidden;
+    box-shadow:0 10px 30px rgba(18,33,62,0.07);
+    transition:transform .3s ease, box-shadow .3s ease;
+  }
+  .listing-card:hover{transform:translateY(-6px);box-shadow:0 20px 40px rgba(18,33,62,0.14);}
+  .listing-img{height:210px;overflow:hidden;position:relative;}
+  .listing-img img{width:100%;height:100%;object-fit:cover;transition:transform .5s ease;}
+  .listing-card:hover .listing-img img{transform:scale(1.06);}
+  .listing-badge{
+    position:absolute;top:14px;left:14px;
+    background:#fff;color:var(--navy);
+    font-size:12px;font-weight:700;
+    padding:5px 12px;border-radius:100px;
+  }
+  .listing-body{padding:20px;}
+  .listing-body .type{font-size:12px;font-weight:700;color:var(--coral);text-transform:uppercase;letter-spacing:.05em;}
+  .listing-body h3{font-size:19px;font-weight:600;color:var(--navy);margin:6px 0 4px;}
+  .listing-body .loc{font-size:13.5px;color:#6A7086;margin-bottom:14px;}
+  .listing-foot{
+    display:flex;justify-content:space-between;align-items:center;
+    padding-top:14px;border-top:1px solid var(--line);
+  }
+  .price strong{font-size:17px;color:var(--navy);font-family:'Fraunces',serif;}
+  .price span{font-size:12.5px;color:#9096A6;}
+  .rating{display:flex;align-items:center;gap:5px;font-size:13.5px;font-weight:700;color:var(--navy);}
+
+  /* ---------- How it works ---------- */
+  .how{padding:100px 0;background:var(--navy);color:#fff;border-radius:40px;margin:40px 20px;}
+  .how .wrap{max-width:1140px;}
+  .how .section-head h2{color:#fff;}
+  .how .section-head p{color:rgba(255,255,255,0.65);}
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:30px;}
+  .step{padding:6px;}
+  .step .num{
+    font-family:'Fraunces',serif;font-size:44px;font-weight:700;
+    color:var(--gold);margin-bottom:14px;display:block;
+  }
+  .step h3{font-size:19px;font-weight:600;margin-bottom:8px;}
+  .step p{font-size:14.5px;line-height:1.6;color:rgba(255,255,255,0.68);}
+
+  /* ---------- Testimonials ---------- */
+  .testimonials{padding:90px 0;}
+  .t-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;}
+  .t-card{
+    background:#fff;border-radius:var(--radius);
+    padding:28px;border:1px solid var(--line);
+  }
+  .t-card .stars{color:var(--gold);font-size:15px;margin-bottom:14px;letter-spacing:2px;}
+  .t-card p{font-size:15px;line-height:1.6;color:#3A3F4C;margin-bottom:20px;}
+  .t-person{display:flex;align-items:center;gap:12px;}
+  .t-person img{width:42px;height:42px;border-radius:50%;object-fit:cover;}
+  .t-person strong{font-size:14px;color:var(--navy);display:block;}
+  .t-person span{font-size:12.5px;color:#9096A6;}
+
+  /* ---------- CTA ---------- */
+  .cta{padding:20px;}
+  .cta-inner{
+    background:linear-gradient(120deg,var(--coral),var(--gold));
+    border-radius:32px;
+    padding:70px 60px;
+    display:flex;justify-content:space-between;align-items:center;gap:30px;
+    flex-wrap:wrap;
+  }
+  .cta-inner h2{color:#fff;font-size:clamp(26px,3.2vw,36px);font-weight:600;max-width:480px;}
+  .cta-inner p{color:rgba(255,255,255,0.85);margin-top:10px;font-size:15px;max-width:420px;}
+  .btn-light{background:#fff;color:var(--navy);}
+  .btn-light:hover{transform:translateY(-2px);}
+
+  /* ---------- Footer ---------- */
+  footer{padding:70px 0 30px;}
+  .foot-grid{
+    display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:40px;
+    padding-bottom:50px;border-bottom:1px solid var(--line);
+  }
+  .foot-grid h4{font-size:14px;color:var(--navy);margin-bottom:16px;}
+  .foot-grid ul{list-style:none;}
+  .foot-grid li{margin-bottom:10px;}
+  .foot-grid a{font-size:14px;color:#6A7086;}
+  .foot-grid a:hover{color:var(--coral);}
+  .foot-bottom{
+    display:flex;justify-content:space-between;align-items:center;
+    padding-top:24px;font-size:13px;color:#9096A6;flex-wrap:wrap;gap:12px;
+  }
+
+  /* ---------- Auth Modal ---------- */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(11,23,48,0.55);
+    display:none;align-items:center;justify-content:center;
+    z-index:200;padding:20px;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal-card{
+    background:#fff;border-radius:22px;width:100%;max-width:400px;
+    padding:34px;position:relative;
+    box-shadow:0 30px 60px rgba(18,33,62,0.3);
+  }
+  .modal-close{
+    position:absolute;top:18px;right:18px;background:none;border:none;
+    font-size:20px;color:#9096A6;cursor:pointer;
+  }
+  .modal-tabs{display:flex;gap:6px;background:#F4F1EC;padding:4px;border-radius:100px;margin-bottom:24px;}
+  .modal-tab{
+    flex:1;text-align:center;padding:9px 0;border-radius:100px;
+    font-size:14px;font-weight:700;cursor:pointer;color:#6A7086;
+    transition:background .2s ease, color .2s ease;
+  }
+  .modal-tab.active{background:var(--navy);color:#fff;}
+  .modal-card h3{font-size:22px;color:var(--navy);margin-bottom:6px;}
+  .modal-card .sub{font-size:13.5px;color:#6A7086;margin-bottom:22px;}
+  .form-group{margin-bottom:16px;}
+  .form-group label{display:block;font-size:13px;font-weight:700;color:var(--navy);margin-bottom:6px;}
+  .form-group input{
+    width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid var(--line);
+    font-family:'Sora',sans-serif;font-size:14.5px;outline:none;
+    transition:border-color .2s ease;
+  }
+  .form-group input:focus{border-color:var(--coral);}
+  .auth-submit{width:100%;padding:13px;font-size:15px;margin-top:6px;}
+  .auth-error{
+    background:#FFF0EE;color:#C0392B;font-size:13.5px;font-weight:600;
+    padding:10px 14px;border-radius:10px;margin-bottom:16px;display:none;
+  }
+  .auth-error.show{display:block;}
+  .form-panel{display:none;}
+  .form-panel.active{display:block;}
+
+  /* ---------- Post Listing Modal ---------- */
+  .modal-card.wide{max-width:520px;max-height:88vh;overflow-y:auto;}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .form-group select{
+    width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid var(--line);
+    font-family:'Sora',sans-serif;font-size:14.5px;outline:none;background:#fff;
+  }
+  .form-group textarea{
+    width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid var(--line);
+    font-family:'Sora',sans-serif;font-size:14.5px;outline:none;resize:vertical;min-height:80px;
+  }
+  .image-drop{
+    border:2px dashed var(--line);border-radius:14px;padding:20px;text-align:center;
+    cursor:pointer;transition:border-color .2s ease, background .2s ease;
+  }
+  .image-drop:hover{border-color:var(--coral);background:#FFF6F4;}
+  .image-drop img{max-height:160px;margin:0 auto;border-radius:10px;object-fit:cover;}
+  .image-drop p{font-size:13px;color:#9096A6;}
+  .listing-card .owner-tag{font-size:12px;color:#9096A6;margin-top:6px;}
+  .listing-delete{
+    background:none;border:none;color:#C0392B;font-size:12.5px;font-weight:700;
+    cursor:pointer;padding:0;
+  }
+  .listing-edit{
+    background:none;border:none;color:var(--navy);font-size:12.5px;font-weight:700;
+    cursor:pointer;padding:0;
+  }
+  .whatsapp-btn{
+    display:inline-flex;align-items:center;gap:6px;margin-top:10px;
+    background:#25D366;color:#fff;font-size:13px;font-weight:700;
+    padding:9px 16px;border-radius:100px;width:fit-content;
+  }
+  .img-thumb{position:relative;width:64px;height:64px;border-radius:10px;overflow:hidden;}
+  .img-thumb img{width:100%;height:100%;object-fit:cover;}
+  .img-thumb button{
+    position:absolute;top:2px;right:2px;background:rgba(11,23,48,0.75);color:#fff;
+    border:none;border-radius:50%;width:18px;height:18px;font-size:11px;cursor:pointer;line-height:1;
+  }
+  .listing-img-nav{
+    position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.85);
+    border:none;width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:14px;
+    display:flex;align-items:center;justify-content:center;color:var(--navy);
+  }
+  .listing-img-prev{left:8px;}
+  .listing-img-next{right:8px;}
+
+  /* ---------- Rating ---------- */
+  .rating-stars{color:var(--gold);font-size:14px;letter-spacing:1px;}
+  .rating-line{display:flex;align-items:center;gap:6px;font-size:13px;color:#6A7086;margin-top:4px;}
+  .details-btn{
+    background:none;border:1.5px solid var(--line);color:var(--navy);
+    font-size:12.5px;font-weight:700;padding:8px 14px;border-radius:100px;
+    cursor:pointer;margin-top:10px;margin-right:8px;
+  }
+  .details-btn:hover{border-color:var(--navy);}
+  .admin-badge{
+    display:inline-block;background:var(--navy);color:#fff;font-size:11px;font-weight:700;
+    padding:3px 9px;border-radius:100px;margin-left:6px;vertical-align:middle;
+  }
+
+  /* ---------- Details modal ---------- */
+  .details-gallery{display:flex;gap:8px;overflow-x:auto;margin-bottom:16px;border-radius:14px;}
+  .details-gallery img{width:100%;max-height:280px;object-fit:cover;border-radius:14px;flex-shrink:0;}
+  .details-section{margin-top:22px;padding-top:18px;border-top:1px solid var(--line);}
+  .details-section h4{font-size:15px;color:var(--navy);margin-bottom:10px;}
+  .review-item{padding:12px 0;border-bottom:1px solid var(--line);}
+  .review-item:last-child{border-bottom:none;}
+  .review-item .rname{font-weight:700;font-size:13.5px;color:var(--navy);}
+  .review-item p{font-size:13.5px;color:#4A5066;margin-top:4px;}
+  .star-select{display:flex;gap:6px;font-size:22px;cursor:pointer;margin-bottom:10px;}
+  .star-select span{color:#D8DCE3;}
+  .star-select span.active{color:var(--gold);}
+  .booking-item{
+    padding:12px 14px;border:1px solid var(--line);border-radius:12px;margin-bottom:10px;
+    font-size:13.5px;
+  }
+  .booking-item .status{
+    display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px;
+    text-transform:capitalize;margin-left:6px;
+  }
+  .status-pending{background:#FFF3EA;color:var(--coral);}
+  .status-accepted{background:#E6F8F5;color:#1E8F7F;}
+  .status-declined{background:#FDEBEA;color:#C0392B;}
+  .booking-actions{display:flex;gap:8px;margin-top:8px;}
+  .booking-actions button{
+    font-size:12px;font-weight:700;padding:6px 12px;border-radius:100px;border:none;cursor:pointer;
+  }
+  .btn-accept{background:#1E8F7F;color:#fff;}
+  .btn-decline{background:#C0392B;color:#fff;}
+
+  /* ---------- Dark mode ---------- */
+  html[data-theme="dark"]{
+    --cream:#14181F; --navy:#EDEFF3; --navy-deep:#EDEFF3; --ink:#E7E9EE; --line:rgba(237,239,243,0.14);
+  }
+  html[data-theme="dark"] body{background:var(--cream);color:var(--ink);}
+  html[data-theme="dark"] header{background:rgba(20,24,31,0.88);}
+  html[data-theme="dark"] .search-card,
+  html[data-theme="dark"] .listing-card,
+  html[data-theme="dark"] .t-card,
+  html[data-theme="dark"] .modal-card{background:#1C212B;color:var(--ink);}
+  html[data-theme="dark"] .form-group input,
+  html[data-theme="dark"] .form-group select,
+  html[data-theme="dark"] .form-group textarea,
+  html[data-theme="dark"] #bookingMessage,
+  html[data-theme="dark"] #reviewComment{background:#20252F;color:var(--ink);border-color:var(--line);}
+  html[data-theme="dark"] .modal-tabs{background:#20252F;}
+  html[data-theme="dark"] .search-field:hover{background:#242A36;}
+  .theme-toggle{
+    background:none;border:1.5px solid var(--line);color:var(--navy);
+    width:38px;height:38px;border-radius:50%;cursor:pointer;font-size:16px;
+    display:flex;align-items:center;justify-content:center;
+  }
+
+  /* ---------- Verified badge ---------- */
+  .verified-badge{
+    display:inline-flex;align-items:center;gap:4px;background:#1E8F7F;color:#fff;
+    font-size:11px;font-weight:700;padding:3px 9px;border-radius:100px;margin-left:6px;
+  }
+  .verify-toggle-btn{
+    background:none;border:1.5px solid var(--teal);color:var(--teal);font-size:12px;font-weight:700;
+    padding:6px 12px;border-radius:100px;cursor:pointer;margin-top:8px;
+  }
+
+  /* ---------- Favorites ---------- */
+  .fav-btn{
+    position:absolute;top:14px;right:14px;background:rgba(255,255,255,0.9);border:none;
+    width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:17px;
+    display:flex;align-items:center;justify-content:center;color:#C0392B;
+  }
+  .fav-btn.active{color:#C0392B;}
+  .fav-btn:not(.active){color:#B7BCC8;}
+
+  /* ---------- Amenities ---------- */
+  .amenity-tags{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0;}
+  .amenity-tag{
+    font-size:12px;font-weight:600;background:#F4F1EC;color:var(--navy);padding:5px 11px;border-radius:100px;
+  }
+  html[data-theme="dark"] .amenity-tag{background:#242A36;}
+  .amenity-check{display:flex;align-items:center;gap:8px;font-size:13.5px;margin-bottom:8px;}
+  .amenity-check input{width:16px;height:16px;}
+
+  /* ---------- Filter/sort bar ---------- */
+  .filter-bar{
+    display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:22px;
+  }
+  .filter-bar select, .filter-bar input[type="number"]{
+    padding:9px 12px;border-radius:10px;border:1.5px solid var(--line);font-family:'Sora',sans-serif;
+    font-size:13.5px;background:#fff;color:var(--navy);
+  }
+  html[data-theme="dark"] .filter-bar select, html[data-theme="dark"] .filter-bar input{background:#1C212B;color:var(--ink);}
+  .filter-bar .price-range{display:flex;align-items:center;gap:6px;}
+  .filter-bar .price-range input{width:90px;}
+
+  /* ---------- Share/report/similar/dashboard ---------- */
+  .share-btn{
+    background:none;border:1.5px solid var(--line);color:var(--navy);font-size:12.5px;font-weight:700;
+    padding:8px 14px;border-radius:100px;cursor:pointer;margin-top:10px;margin-right:8px;
+  }
+  .report-link{font-size:12px;color:#9096A6;text-decoration:underline;cursor:pointer;margin-top:12px;display:inline-block;}
+  .similar-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+  .dashboard-stat{font-size:12.5px;color:#6A7086;margin-top:6px;}
+
+  /* ---------- Map view ---------- */
+  #mapView{display:none;height:460px;border-radius:18px;margin-bottom:24px;overflow:hidden;}
+  .map-popup h4{font-size:14px;margin-bottom:4px;}
+  .map-popup .price{font-size:13px;color:var(--coral);font-weight:700;}
+
+  /* ---------- Responsive ---------- */
+  @media(max-width:960px){
+    .hero .wrap{grid-template-columns:1fr;}
+    .collage{height:380px;margin-top:10px;}
+    .cat-grid, .listing-grid, .steps, .t-grid{grid-template-columns:1fr 1fr;}
+    .foot-grid{grid-template-columns:1fr 1fr;gap:30px;}
+  }
+  @media(max-width:680px){
+    .nav-links{display:none;}
+    .menu-toggle{display:block;}
+    .search-card{grid-template-columns:1fr;}
+    .cat-grid, .listing-grid, .steps, .t-grid, .foot-grid{grid-template-columns:1fr;}
+    .hero-stats{gap:22px;}
+    .cta-inner{padding:44px 26px;}
+    .how{margin:20px 10px;border-radius:26px;padding:60px 0;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;animation:none !important;}
+  }
+  :focus-visible{outline:3px solid var(--teal);outline-offset:2px;}
+</style>
+</head>
+<body>
+
+<header id="siteHeader">
+  <nav class="wrap">
+    <a href="#" class="logo"><span class="dot"></span>Basera</a>
+    <div class="nav-links">
+      <a href="#categories">Rooms</a>
+      <a href="#categories">Hostels</a>
+      <a href="#listings">Homes</a>
+      <a href="#how">How it works</a>
+    </div>
+    <div class="nav-actions" id="navActions">
+      <button class="theme-toggle" id="themeToggle" title="Toggle dark mode">🌙</button>
+      <a href="#" class="btn btn-ghost" id="loginBtn">Log in</a>
+      <a href="#" class="btn btn-primary" id="registerBtn">Sign up</a>
+      <span id="userChip" style="display:none;align-items:center;gap:12px;">
+        <a href="#" class="btn btn-primary open-post-modal" id="postPropertyBtn">+ Post property</a>
+        <a href="#" class="btn btn-ghost" id="bookingsBtn">Bookings</a>
+        <a href="#" class="btn btn-ghost" id="reportsBtn" style="display:none;">Reports</a>
+        <span id="userName" style="font-weight:700;color:var(--navy);font-size:14.5px;"></span>
+        <a href="#" class="btn btn-ghost" id="logoutBtn">Log out</a>
+      </span>
+      <button class="menu-toggle" id="menuToggle">☰</button>
+    </div>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <span class="eyebrow">Rooms · Hostels · Full Homes</span>
+      <h1>Apna basera,<br><em>kahin bhi.</em></h1>
+      <p class="lead">Find a verified room, hostel bed or full home on rent — in any city, for a night or for the whole semester. No brokers, no surprises.</p>
+
+      <div class="search-card">
+        <div class="search-field">
+          <label>Location</label>
+          <input type="text" id="heroSearchLocation" placeholder="Lahore, Karachi, Islamabad…">
+        </div>
+        <div class="search-field">
+          <label>Move in</label>
+          <input type="date" id="heroSearchDate">
+        </div>
+        <div class="search-field">
+          <label>Stay type</label>
+          <select id="heroSearchType">
+            <option value="">Any</option>
+            <option value="Room">Private room</option>
+            <option value="Hostel">Hostel bed</option>
+            <option value="Home">Full home</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" id="heroSearchBtn" type="button">Search</button>
+      </div>
+
+      <div class="hero-stats">
+        <div><strong>12,400+</strong><span>Verified listings</span></div>
+        <div><strong>38</strong><span>Cities covered</span></div>
+        <div><strong>4.8/5</strong><span>Average rating</span></div>
+      </div>
+    </div>
+
+    <div class="collage">
+      <img class="c1" src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80" alt="Bright modern private room with a bed and large window">
+      <img class="c2" src="https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?w=700&q=80" alt="Shared hostel dormitory with bunk beds">
+      <div class="badge-float">✓ Verified stays only</div>
+    </div>
+  </div>
+</section>
+
+<section class="categories" id="categories">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow">Pick your stay</span>
+        <h2>Three ways to call it home</h2>
+      </div>
+      <p>Whether you're a student, a working professional, or a family relocating — there's a listing type built for how you actually live.</p>
+    </div>
+    <div class="cat-grid">
+      <div class="cat-card rooms">
+        <h3>Private Rooms</h3>
+        <p>A furnished room inside a shared house. Your own lock, shared kitchen.</p>
+        <span class="tag">From Rs 12,000/mo</span>
+      </div>
+      <div class="cat-card hostels">
+        <h3>Hostels</h3>
+        <p>Budget beds for students and travellers, with mess and wifi included.</p>
+        <span class="tag">From Rs 6,500/mo</span>
+      </div>
+      <div class="cat-card homes">
+        <h3>Full Homes</h3>
+        <p>Entire houses and apartments for families — short or long term.</p>
+        <span class="tag">From Rs 45,000/mo</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="listings" id="listings">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow">Real listings</span>
+        <h2>Posted by real owners</h2>
+      </div>
+      <p>Every listing here was added by a Basera member. Log in to post your own room, hostel or home.</p>
+      <a href="#" class="btn btn-primary open-post-modal" id="postListingBtn" style="margin-top:6px;">+ Post a listing</a>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:22px;flex-wrap:wrap;">
+      <div class="modal-tabs" style="display:inline-flex;width:auto;">
+        <div class="modal-tab active" data-view="all" id="viewAllTab">All listings</div>
+        <div class="modal-tab" data-view="mine" id="viewMineTab" style="display:none;">My listings</div>
+        <div class="modal-tab" data-view="favorites" id="viewFavTab" style="display:none;">❤ Favorites</div>
+      </div>
+      <span id="activeFilterChip" style="display:none;font-size:13px;font-weight:700;color:var(--coral);background:#FFF3EA;padding:8px 14px;border-radius:100px;">
+        <span id="activeFilterText"></span> · <a href="#" id="clearFilterBtn" style="text-decoration:underline;color:var(--coral);">clear</a>
+      </span>
+      <button class="details-btn" id="toggleMapBtn" type="button" style="margin:0;">🗺 Map view</button>
+    </div>
+
+    <div class="filter-bar">
+      <div class="price-range">
+        <input type="number" id="filterMinPrice" placeholder="Min Rs">
+        <span>—</span>
+        <input type="number" id="filterMaxPrice" placeholder="Max Rs">
+      </div>
+      <select id="filterAmenity">
+        <option value="">Any amenity</option>
+        <option value="AC">AC</option>
+        <option value="WiFi">WiFi</option>
+        <option value="Parking">Parking</option>
+        <option value="Attached Bathroom">Attached Bathroom</option>
+        <option value="Furnished">Furnished</option>
+        <option value="Generator/Backup">Generator/Backup</option>
+      </select>
+      <select id="sortListings">
+        <option value="newest">Newest first</option>
+        <option value="price_low">Price: low to high</option>
+        <option value="price_high">Price: high to low</option>
+        <option value="rating">Highest rated</option>
+      </select>
+      <button class="details-btn" id="applyFiltersBtn" type="button" style="margin:0;">Apply</button>
+    </div>
+
+    <div id="mapView"></div>
+
+    <div class="listing-grid" id="listingGrid">
+      <p id="listingEmptyState" style="color:#9096A6;font-size:14.5px;grid-column:1/-1;">Loading listings…</p>
+    </div>
+  </div>
+</section>
+
+<section class="how" id="how">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow" style="color:var(--gold);">The process</span>
+        <h2>Three steps, no broker</h2>
+      </div>
+      <p>Every listing on Basera is visited and verified by our team before it goes live — so what you see is what you move into.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <span class="num">01</span>
+        <h3>Search & shortlist</h3>
+        <p>Filter by city, budget and stay type. Every photo and price is verified, updated weekly.</p>
+      </div>
+      <div class="step">
+        <span class="num">02</span>
+        <h3>Book a visit or reserve</h3>
+        <p>Schedule a free visit, or reserve instantly online with a small refundable token.</p>
+      </div>
+      <div class="step">
+        <span class="num">03</span>
+        <h3>Move in</h3>
+        <p>Sign digitally, pay your first month, and get the keys — usually within 48 hours.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="testimonials">
+  <div class="wrap">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow">From our residents</span>
+        <h2>People who found their basera</h2>
+      </div>
+    </div>
+    <div class="t-grid">
+      <div class="t-card">
+        <div class="stars">★★★★★</div>
+        <p>"Moved to Lahore for a new job and had a verified room booked within two days. Zero broker calls."</p>
+        <div class="t-person">
+          <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&q=80" alt="Portrait of Hamza R.">
+          <div><strong>Hamza R.</strong><span>Software Engineer</span></div>
+        </div>
+      </div>
+      <div class="t-card">
+        <div class="stars">★★★★★</div>
+        <p>"The hostel listing matched exactly what was in the photos. Mess food is genuinely good too."</p>
+        <div class="t-person">
+          <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=100&q=80" alt="Portrait of Ayesha K.">
+          <div><strong>Ayesha K.</strong><span>University Student</span></div>
+        </div>
+      </div>
+      <div class="t-card">
+        <div class="stars">★★★★★</div>
+        <p>"Rented out our extra floor as a full home in under a week. Payments land on time, every time."</p>
+        <div class="t-person">
+          <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&q=80" alt="Portrait of Bilal S.">
+          <div><strong>Bilal S.</strong><span>Property Owner</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta" id="cta">
+  <div class="wrap">
+    <div class="cta-inner">
+      <div>
+        <h2>Have a spare room or a full house?</h2>
+        <p>List it on Basera for free. We verify, photograph and match it with residents in your city.</p>
+      </div>
+      <a href="#" class="btn btn-light open-post-modal">List your property →</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <a href="#" class="logo" style="margin-bottom:14px;display:inline-flex;"><span class="dot"></span>Basera</a>
+        <p style="font-size:14px;color:#6A7086;line-height:1.6;max-width:280px;">A verified rooms, hostels and homes rental platform, built for how people actually move cities.</p>
+      </div>
+      <div>
+        <h4>Explore</h4>
+        <ul>
+          <li><a href="#categories">Private rooms</a></li>
+          <li><a href="#categories">Hostels</a></li>
+          <li><a href="#listings">Full homes</a></li>
+          <li><a href="#how">How it works</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Company</h4>
+        <ul>
+          <li><a href="#">About Basera</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Trust & safety</a></li>
+          <li><a href="#">Contact us</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>For owners</h4>
+        <ul>
+          <li><a href="#cta">List your property</a></li>
+          <li><a href="#">Pricing</a></li>
+          <li><a href="#">Owner resources</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 Basera. All rights reserved.</span>
+      <span>Lahore · Karachi · Islamabad · Rawalpindi</span>
+    </div>
+  </div>
+</footer>
+
+<div class="modal-overlay" id="authModal">
+  <div class="modal-card">
+    <button class="modal-close" id="modalClose">✕</button>
+    <div class="modal-tabs">
+      <div class="modal-tab active" data-tab="login">Log in</div>
+      <div class="modal-tab" data-tab="register">Sign up</div>
+    </div>
+
+    <div class="form-panel active" id="loginPanel">
+      <h3>Welcome back</h3>
+      <p class="sub">Log in to manage your bookings and listings.</p>
+      <div class="auth-error" id="loginError"></div>
+      <form id="loginForm">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="loginEmail" required autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="loginPassword" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn btn-primary auth-submit">Log in</button>
+      </form>
+    </div>
+
+    <div class="form-panel" id="registerPanel">
+      <h3>Create your account</h3>
+      <p class="sub">Join Basera to book stays or list your property.</p>
+      <div class="auth-error" id="registerError"></div>
+      <form id="registerForm">
+        <div class="form-group">
+          <label>Full name</label>
+          <input type="text" id="registerName" required autocomplete="name">
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="registerEmail" required autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="registerPassword" required minlength="6" autocomplete="new-password">
+        </div>
+        <button type="submit" class="btn btn-primary auth-submit">Sign up</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="postModal">
+  <div class="modal-card wide">
+    <button class="modal-close" id="postModalClose">✕</button>
+    <h3 id="postModalTitle">Post your property</h3>
+    <p class="sub">Add real details and photos — your listing will show up on Basera right away.</p>
+    <div class="auth-error" id="postError"></div>
+    <form id="postForm">
+      <input type="hidden" id="postListingId" value="">
+      <div class="form-group">
+        <label>Title</label>
+        <input type="text" id="postTitle" placeholder="e.g. Sunlit Room near Liberty" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Type</label>
+          <select id="postType" required>
+            <option value="Room">Private Room</option>
+            <option value="Hostel">Hostel</option>
+            <option value="Home">Full Home</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Price (Rs / month)</label>
+          <input type="number" id="postPrice" min="0" placeholder="18000" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Location</label>
+        <input type="text" id="postLocation" placeholder="e.g. Gulberg III, Lahore" required>
+      </div>
+      <div class="form-group">
+        <label>WhatsApp number (with country code)</label>
+        <input type="text" id="postPhone" placeholder="e.g. 923001234567" required>
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="postDescription" placeholder="Tell renters what makes this place worth it…"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Amenities</label>
+        <div id="amenityChecks">
+          <label class="amenity-check"><input type="checkbox" value="AC"> AC</label>
+          <label class="amenity-check"><input type="checkbox" value="WiFi"> WiFi</label>
+          <label class="amenity-check"><input type="checkbox" value="Parking"> Parking</label>
+          <label class="amenity-check"><input type="checkbox" value="Attached Bathroom"> Attached Bathroom</label>
+          <label class="amenity-check"><input type="checkbox" value="Furnished"> Furnished</label>
+          <label class="amenity-check"><input type="checkbox" value="Generator/Backup"> Generator/Backup</label>
+        </div>
+      <div class="form-group">
+        <label>Photos (up to 5) — auto-compressed for fast loading</label>
+        <div class="image-drop" id="imageDrop">
+          <p id="imageDropText">Click to upload real photos (JPG/PNG)</p>
+        </div>
+        <input type="file" id="postImage" accept="image/*" multiple style="display:none;">
+        <div id="imageThumbs" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;"></div>
+      </div>
+      <button type="submit" class="btn btn-primary auth-submit" id="postSubmitBtn">Publish listing</button>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="detailsModal">
+  <div class="modal-card wide">
+    <button class="modal-close" id="detailsModalClose">✕</button>
+    <div id="detailsGallery" class="details-gallery"></div>
+    <span class="listing-badge" id="detailsType" style="position:static;display:inline-block;margin-bottom:8px;"></span>
+    <h3 id="detailsTitle"></h3>
+    <p class="loc" id="detailsLocation"></p>
+    <div class="price" style="margin:8px 0;"><strong id="detailsPrice"></strong><span> /month</span></div>
+    <p id="detailsDescription" style="font-size:14.5px;color:#4A5066;line-height:1.6;"></p>
+    <div id="detailsAmenities" class="amenity-tags"></div>
+    <p style="font-size:13px;color:#9096A6;margin-top:8px;">Posted by <span id="detailsOwner"></span> · <span id="detailsViews"></span> views</p>
+    <a href="#" id="detailsWhatsapp" target="_blank" class="whatsapp-btn" style="display:none;">💬 Contact on WhatsApp</a>
+    <button type="button" class="share-btn" id="detailsShareBtn">🔗 Share</button>
+    <br>
+    <span class="report-link" id="detailsReportBtn">🚩 Report this listing</span>
+
+    <div class="details-section" id="bookingSection" style="display:none;">
+      <h4>Request to book</h4>
+      <div class="auth-error" id="bookingError"></div>
+      <textarea id="bookingMessage" placeholder="Introduce yourself and mention your preferred move-in date…" style="width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid var(--line);font-family:'Sora',sans-serif;font-size:14px;min-height:70px;"></textarea>
+      <button class="btn btn-primary" id="bookingSubmitBtn" style="margin-top:10px;">Send request</button>
+    </div>
+
+    <div class="details-section">
+      <h4>Reviews <span id="detailsRatingLine" style="font-weight:400;color:#6A7086;font-size:13px;"></span></h4>
+      <div id="reviewFormWrap" style="display:none;margin-bottom:16px;">
+        <div class="star-select" id="starSelect">
+          <span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span><span data-v="4">★</span><span data-v="5">★</span>
+        </div>
+        <textarea id="reviewComment" placeholder="Share your experience (optional)" style="width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid var(--line);font-family:'Sora',sans-serif;font-size:14px;min-height:60px;"></textarea>
+        <button class="btn btn-primary" id="reviewSubmitBtn" style="margin-top:10px;">Submit review</button>
+      </div>
+      <div id="reviewsList"></div>
+    </div>
+
+    <div class="details-section" id="similarSection" style="display:none;">
+      <h4>Similar listings</h4>
+      <div class="similar-grid" id="similarGrid"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="bookingsModal">
+  <div class="modal-card wide">
+    <button class="modal-close" id="bookingsModalClose">✕</button>
+    <h3>Bookings</h3>
+    <div class="modal-tabs" style="margin-bottom:18px;">
+      <div class="modal-tab active" data-btab="received" id="bTabReceived">Requests received</div>
+      <div class="modal-tab" data-btab="sent" id="bTabSent">Requests sent</div>
+    </div>
+    <div id="bookingsReceivedPanel"></div>
+    <div id="bookingsSentPanel" style="display:none;"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="reportsModal">
+  <div class="modal-card wide">
+    <button class="modal-close" id="reportsModalClose">✕</button>
+    <h3>Reported listings</h3>
+    <p class="sub">Reports submitted by users. Delete a listing directly if it violates guidelines.</p>
+    <div id="reportsPanel"></div>
+  </div>
+</div>
+
+<script>
+  const header = document.getElementById('siteHeader');
+  window.addEventListener('scroll', () => {
+    header.classList.toggle('scrolled', window.scrollY > 10);
+  });
+
+  const menuToggle = document.getElementById('menuToggle');
+  const navLinks = document.querySelector('.nav-links');
+  menuToggle.addEventListener('click', () => {
+    const open = navLinks.style.display === 'flex';
+    navLinks.style.display = open ? 'none' : 'flex';
+    navLinks.style.cssText += open ? '' : 'position:absolute;top:64px;left:0;right:0;flex-direction:column;background:#fff;padding:20px 28px;gap:16px;box-shadow:0 12px 20px rgba(18,33,62,0.08);';
+  });
+
+  // ---------- Auth ----------
+  const authModal = document.getElementById('authModal');
+  const modalClose = document.getElementById('modalClose');
+  const loginBtn = document.getElementById('loginBtn');
+  const registerBtn = document.getElementById('registerBtn');
+  const tabs = document.querySelectorAll('.modal-tab');
+  const loginPanel = document.getElementById('loginPanel');
+  const registerPanel = document.getElementById('registerPanel');
+  const userChip = document.getElementById('userChip');
+  const userName = document.getElementById('userName');
+  const logoutBtn = document.getElementById('logoutBtn');
+
+  function openModal(tab) {
+    authModal.classList.add('open');
+    switchTab(tab);
+  }
+  function closeModal() { authModal.classList.remove('open'); }
+  function switchTab(tab) {
+    tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+    loginPanel.classList.toggle('active', tab === 'login');
+    registerPanel.classList.toggle('active', tab === 'register');
+  }
+
+  loginBtn.addEventListener('click', (e) => { e.preventDefault(); openModal('login'); });
+  registerBtn.addEventListener('click', (e) => { e.preventDefault(); openModal('register'); });
+  modalClose.addEventListener('click', closeModal);
+  authModal.addEventListener('click', (e) => { if (e.target === authModal) closeModal(); });
+  tabs.forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
+
+  let currentUser = null;
+
+  let favoriteIds = new Set();
+
+  async function loadFavorites() {
+    if (!currentUser) { favoriteIds = new Set(); return; }
+    try {
+      const res = await fetch('/api/favorites/mine', { credentials: 'include' });
+      const data = await res.json();
+      favoriteIds = new Set(data.favorite_ids || []);
+    } catch { favoriteIds = new Set(); }
+  }
+
+  function showLoggedInUI(user) {
+    currentUser = user;
+    loginBtn.style.display = 'none';
+    registerBtn.style.display = 'none';
+    userChip.style.display = 'flex';
+    userName.textContent = 'Hi, ' + user.name.split(' ')[0];
+    const mineTab = document.getElementById('viewMineTab');
+    if (mineTab) mineTab.style.display = 'block';
+    const favTab = document.getElementById('viewFavTab');
+    if (favTab) favTab.style.display = 'block';
+    const reportsBtn = document.getElementById('reportsBtn');
+    if (reportsBtn) reportsBtn.style.display = user.is_admin ? 'inline-flex' : 'none';
+    loadFavorites().then(renderListings);
+  }
+  function showLoggedOutUI() {
+    currentUser = null;
+    loginBtn.style.display = 'inline-flex';
+    registerBtn.style.display = 'inline-flex';
+    userChip.style.display = 'none';
+    const mineTab = document.getElementById('viewMineTab');
+    if (mineTab) mineTab.style.display = 'none';
+    const favTab = document.getElementById('viewFavTab');
+    if (favTab) favTab.style.display = 'none';
+    const reportsBtn = document.getElementById('reportsBtn');
+    if (reportsBtn) reportsBtn.style.display = 'none';
+    currentView = 'all';
+    favoriteIds = new Set();
+    renderListings();
+  }
+
+  // Check if a session already exists (cookie set from a previous visit)
+  fetch('/api/me', { credentials: 'include' })
+    .then(r => r.ok ? r.json() : Promise.reject())
+    .then(data => showLoggedInUI(data.user))
+    .catch(() => showLoggedOutUI());
+
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errorBox = document.getElementById('loginError');
+    errorBox.classList.remove('show');
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Login failed.');
+      showLoggedInUI(data.user);
+      closeModal();
+    } catch (err) {
+      errorBox.textContent = err.message;
+      errorBox.classList.add('show');
+    }
+  });
+
+  document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errorBox = document.getElementById('registerError');
+    errorBox.classList.remove('show');
+    const name = document.getElementById('registerName').value;
+    const email = document.getElementById('registerEmail').value;
+    const password = document.getElementById('registerPassword').value;
+
+    try {
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ name, email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Registration failed.');
+      showLoggedInUI(data.user);
+      closeModal();
+    } catch (err) {
+      errorBox.textContent = err.message;
+      errorBox.classList.add('show');
+    }
+  });
+
+  logoutBtn.addEventListener('click', async (e) => {
+    e.preventDefault();
+    await fetch('/api/logout', { method: 'POST', credentials: 'include' });
+    showLoggedOutUI();
+  });
+
+  // ---------- Listings ----------
+  const postModal = document.getElementById('postModal');
+  const postModalClose = document.getElementById('postModalClose');
+  const imageDrop = document.getElementById('imageDrop');
+  const postImageInput = document.getElementById('postImage');
+  const imageThumbs = document.getElementById('imageThumbs');
+  const imageDropText = document.getElementById('imageDropText');
+  const MAX_PHOTOS = 5;
+  let selectedImages = []; // array of compressed base64 data URLs
+  let allListings = [];
+  let currentView = 'all'; // 'all' | 'mine'
+  let activeFilter = null; // { location, type }
+
+  // Resizes + compresses a photo client-side so uploads stay well under
+  // Vercel's 4.5MB request limit, even for large phone camera photos.
+  function compressImage(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          const maxDim = 1280;
+          let { width, height } = img;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) { height = Math.round(height * maxDim / width); width = maxDim; }
+            else { width = Math.round(width * maxDim / height); height = maxDim; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', 0.72));
+        };
+        img.onerror = () => reject(new Error('Could not read image'));
+        img.src = reader.result;
+      };
+      reader.onerror = () => reject(new Error('Could not read file'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function resetPostForm() {
+    document.getElementById('postForm').reset();
+    document.getElementById('postListingId').value = '';
+    document.getElementById('postModalTitle').textContent = 'Post your property';
+    document.getElementById('postSubmitBtn').textContent = 'Publish listing';
+    selectedImages = [];
+    imageThumbs.innerHTML = '';
+    imageDropText.textContent = 'Click to upload real photos (JPG/PNG)';
+  }
+
+  document.querySelectorAll('.open-post-modal').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (!currentUser) {
+        openModal('register'); // must be logged in to post
+        return;
+      }
+      resetPostForm();
+      postModal.classList.add('open');
+    });
+  });
+  postModalClose.addEventListener('click', () => postModal.classList.remove('open'));
+  postModal.addEventListener('click', (e) => { if (e.target === postModal) postModal.classList.remove('open'); });
+
+  function renderThumbs() {
+    imageThumbs.innerHTML = selectedImages.map((src, i) => `
+      <div class="img-thumb">
+        <img src="${src}" alt="Photo ${i + 1}">
+        <button type="button" data-i="${i}" class="remove-thumb">✕</button>
+      </div>
+    `).join('');
+    imageThumbs.querySelectorAll('.remove-thumb').forEach(b => {
+      b.addEventListener('click', () => {
+        selectedImages.splice(Number(b.dataset.i), 1);
+        renderThumbs();
+      });
+    });
+    imageDropText.textContent = selectedImages.length
+      ? selectedImages.length + ' photo(s) selected'
+      : 'Click to upload real photos (JPG/PNG)';
+  }
+
+  imageDrop.addEventListener('click', () => postImageInput.click());
+  postImageInput.addEventListener('change', () => {
+    const files = Array.from(postImageInput.files || []);
+    (async () => {
+      for (const file of files) {
+        if (selectedImages.length >= MAX_PHOTOS) {
+          alert('You can upload up to ' + MAX_PHOTOS + ' photos.');
+          break;
+        }
+        try {
+          const compressed = await compressImage(file);
+          selectedImages.push(compressed);
+          renderThumbs();
+        } catch (err) {
+          alert('Could not process ' + file.name + '. Try a different photo.');
+        }
+      }
+      postImageInput.value = '';
+    })();
+  });
+
+  document.getElementById('postForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const errorBox = document.getElementById('postError');
+    errorBox.classList.remove('show');
+    const submitBtn = document.getElementById('postSubmitBtn');
+    const editingId = document.getElementById('postListingId').value;
+
+    const payload = {
+      title: document.getElementById('postTitle').value,
+      type: document.getElementById('postType').value,
+      price: document.getElementById('postPrice').value,
+      location: document.getElementById('postLocation').value,
+      phone: document.getElementById('postPhone').value.replace(/[^0-9]/g, ''),
+      description: document.getElementById('postDescription').value,
+      images: selectedImages,
+      amenities: Array.from(document.querySelectorAll('#amenityChecks input:checked')).map(el => el.value),
+    };
+
+    if (!editingId && selectedImages.length === 0) {
+      errorBox.textContent = 'Please add at least one real photo of the property.';
+      errorBox.classList.add('show');
+      return;
+    }
+    if (!payload.phone || payload.phone.length < 10) {
+      errorBox.textContent = 'Enter a valid WhatsApp number with country code.';
+      errorBox.classList.add('show');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = editingId ? 'Saving…' : 'Publishing…';
+
+    try {
+      const url = editingId ? '/api/listings/' + editingId : '/api/listings';
+      const method = editingId ? 'PUT' : 'POST';
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not save listing.');
+
+      postModal.classList.remove('open');
+      resetPostForm();
+      await loadListings();
+      document.getElementById('listings').scrollIntoView({ behavior: 'smooth' });
+    } catch (err) {
+      errorBox.textContent = err.message;
+      errorBox.classList.add('show');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = editingId ? 'Save changes' : 'Publish listing';
+    }
+  });
+
+  function getImages(listing) {
+    try {
+      const arr = JSON.parse(listing.images || '[]');
+      return arr.length ? arr : (listing.image_data ? [listing.image_data] : []);
+    } catch {
+      return listing.image_data ? [listing.image_data] : [];
+    }
+  }
+
+  function getAmenities(listing) {
+    try { return JSON.parse(listing.amenities || '[]'); } catch { return []; }
+  }
+
+  function listingCardHTML(listing) {
+    const canManage = currentUser && (currentUser.id === listing.user_id || currentUser.is_admin);
+    const isAdminNotOwner = currentUser && currentUser.is_admin && currentUser.id !== listing.user_id;
+    const isOwnerViewing = currentUser && currentUser.id === listing.user_id;
+    const price = Number(listing.price).toLocaleString('en-PK');
+    const images = getImages(listing);
+    const amenities = getAmenities(listing);
+    const typeLabel = listing.type === 'Room' ? 'Private Room' : listing.type === 'Hostel' ? 'Hostel' : 'Full Home';
+    const waLink = listing.contact_phone
+      ? 'https://wa.me/' + listing.contact_phone + '?text=' + encodeURIComponent('Hi, I saw "' + listing.title + '" on Stayzo and I\'m interested.')
+      : null;
+    const avgRating = Number(listing.avg_rating || 0);
+    const reviewCount = Number(listing.review_count || 0);
+    const ratingHTML = reviewCount > 0
+      ? `<div class="rating-line"><span class="rating-stars">${'★'.repeat(Math.round(avgRating))}${'☆'.repeat(5 - Math.round(avgRating))}</span> ${avgRating.toFixed(1)} (${reviewCount})</div>`
+      : `<div class="rating-line">No reviews yet</div>`;
+    const isFav = currentUser && favoriteIds.has(listing.id);
+
+    return `
+      <div class="listing-card" data-id="${listing.id}">
+        <div class="listing-img">
+          <img src="${images[0] || ''}" alt="${listing.title}" data-idx="0" class="listing-main-img">
+          <span class="listing-badge">${typeLabel}</span>
+          ${currentUser ? `<button type="button" class="fav-btn ${isFav ? 'active' : ''}" data-id="${listing.id}">${isFav ? '♥' : '♡'}</button>` : ''}
+          ${images.length > 1 ? `
+            <button type="button" class="listing-img-nav listing-img-prev">‹</button>
+            <button type="button" class="listing-img-nav listing-img-next">›</button>
+          ` : ''}
+        </div>
+        <div class="listing-body">
+          <div class="type">${listing.type} · ${listing.location.split(',')[0]}</div>
+          <h3>${listing.title}${listing.is_verified ? '<span class="verified-badge">✓ Verified</span>' : ''}</h3>
+          <p class="loc">${listing.location}</p>
+          ${ratingHTML}
+          ${amenities.length ? `<div class="amenity-tags">${amenities.slice(0, 3).map(a => '<span class="amenity-tag">' + a + '</span>').join('')}</div>` : ''}
+          <div class="listing-foot">
+            <div class="price"><strong>Rs ${price}</strong><span> /month</span></div>
+          </div>
+          <button type="button" class="details-btn view-details" data-id="${listing.id}">View details</button>
+          ${waLink ? `<a href="${waLink}" target="_blank" class="whatsapp-btn">💬 Contact on WhatsApp</a>` : ''}
+          ${isOwnerViewing ? `<p class="dashboard-stat">👁 ${listing.views || 0} views</p>` : ''}
+          <p class="owner-tag">
+            Posted by ${listing.owner_name}
+            ${isAdminNotOwner ? '<span class="admin-badge">Admin view</span>' : ''}
+            ${canManage && currentUser.id === listing.user_id ? ' · <button class="listing-edit" data-id="' + listing.id + '">Edit</button>' : ''}
+            ${canManage ? ' · <button class="listing-delete" data-id="' + listing.id + '">Delete</button>' : ''}
+          </p>
+          ${currentUser && currentUser.is_admin ? `<button type="button" class="verify-toggle-btn" data-id="${listing.id}" data-verified="${listing.is_verified}">${listing.is_verified ? 'Unverify' : 'Mark Verified'}</button>` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  function applyFiltersAndView(listings) {
+    let result = listings;
+    if (currentView === 'mine' && currentUser) {
+      result = result.filter(l => l.user_id === currentUser.id);
+    }
+    if (currentView === 'favorites' && currentUser) {
+      result = result.filter(l => favoriteIds.has(l.id));
+    }
+    if (activeFilter) {
+      if (activeFilter.location) {
+        const q = activeFilter.location.toLowerCase();
+        result = result.filter(l => l.location.toLowerCase().includes(q));
+      }
+      if (activeFilter.type) {
+        result = result.filter(l => l.type === activeFilter.type);
+      }
+      if (activeFilter.minPrice) {
+        result = result.filter(l => Number(l.price) >= Number(activeFilter.minPrice));
+      }
+      if (activeFilter.maxPrice) {
+        result = result.filter(l => Number(l.price) <= Number(activeFilter.maxPrice));
+      }
+      if (activeFilter.amenity) {
+        result = result.filter(l => getAmenities(l).includes(activeFilter.amenity));
+      }
+    }
+    const sortBy = (activeFilter && activeFilter.sort) || 'newest';
+    result = [...result].sort((a, b) => {
+      if (sortBy === 'price_low') return Number(a.price) - Number(b.price);
+      if (sortBy === 'price_high') return Number(b.price) - Number(a.price);
+      if (sortBy === 'rating') return Number(b.avg_rating || 0) - Number(a.avg_rating || 0);
+      return new Date(b.created_at) - new Date(a.created_at);
+    });
+    return result;
+  }
+
+  function renderGrid() {
+    const grid = document.getElementById('listingGrid');
+    const visible = applyFiltersAndView(allListings);
+
+    if (visible.length === 0) {
+      const msg = currentView === 'mine'
+        ? "You haven't posted any listings yet."
+        : 'No listings match your search.';
+      grid.innerHTML = `<p style="color:#9096A6;font-size:14.5px;grid-column:1/-1;">${msg}</p>`;
+      return;
+    }
+
+    grid.innerHTML = visible.map(listingCardHTML).join('');
+
+    grid.querySelectorAll('.listing-delete').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Delete this listing?')) return;
+        await fetch('/api/listings/' + btn.dataset.id, { method: 'DELETE', credentials: 'include' });
+        await loadListings();
+      });
+    });
+
+    grid.querySelectorAll('.view-details').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const listing = allListings.find(l => l.id === Number(btn.dataset.id));
+        if (listing) openDetailsModal(listing);
+      });
+    });
+
+    grid.querySelectorAll('.listing-edit').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const listing = allListings.find(l => l.id === Number(btn.dataset.id));
+        if (!listing) return;
+        resetPostForm();
+        document.getElementById('postListingId').value = listing.id;
+        document.getElementById('postModalTitle').textContent = 'Edit your listing';
+        document.getElementById('postSubmitBtn').textContent = 'Save changes';
+        document.getElementById('postTitle').value = listing.title;
+        document.getElementById('postType').value = listing.type;
+        document.getElementById('postPrice').value = listing.price;
+        document.getElementById('postLocation').value = listing.location;
+        document.getElementById('postPhone').value = listing.contact_phone || '';
+        document.getElementById('postDescription').value = listing.description || '';
+        const existingAmenities = getAmenities(listing);
+        document.querySelectorAll('#amenityChecks input').forEach(el => {
+          el.checked = existingAmenities.includes(el.value);
+        });
+        selectedImages = getImages(listing);
+        renderThumbs();
+        postModal.classList.add('open');
+      });
+    });
+
+    grid.querySelectorAll('.fav-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = Number(btn.dataset.id);
+        if (favoriteIds.has(id)) {
+          await fetch('/api/favorites/' + id, { method: 'DELETE', credentials: 'include' });
+          favoriteIds.delete(id);
+        } else {
+          await fetch('/api/favorites', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+            body: JSON.stringify({ listing_id: id }),
+          });
+          favoriteIds.add(id);
+        }
+        renderGrid();
+      });
+    });
+
+    grid.querySelectorAll('.verify-toggle-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const id = Number(btn.dataset.id);
+        const currentlyVerified = btn.dataset.verified === 'true';
+        await fetch('/api/listings/' + id + '/verify', {
+          method: 'PATCH', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          body: JSON.stringify({ verified: !currentlyVerified }),
+        });
+        await loadListings();
+      });
+    });
+
+    grid.querySelectorAll('.listing-card').forEach(card => {
+      const listing = allListings.find(l => l.id === Number(card.dataset.id));
+      if (!listing) return;
+      const images = getImages(listing);
+      if (images.length <= 1) return;
+      let idx = 0;
+      const img = card.querySelector('.listing-main-img');
+      card.querySelector('.listing-img-prev').addEventListener('click', () => {
+        idx = (idx - 1 + images.length) % images.length;
+        img.src = images[idx];
+      });
+      card.querySelector('.listing-img-next').addEventListener('click', () => {
+        idx = (idx + 1) % images.length;
+        img.src = images[idx];
+      });
+    });
+  }
+
+  async function loadListings() {
+    const grid = document.getElementById('listingGrid');
+    try {
+      const res = await fetch('/api/listings');
+      const data = await res.json();
+      allListings = data.listings || [];
+      renderGrid();
+      maybeOpenFromUrl();
+    } catch (err) {
+      grid.innerHTML = '<p style="color:#9096A6;font-size:14.5px;grid-column:1/-1;">Could not load listings right now.</p>';
+    }
+  }
+
+  // Kept for compatibility with earlier calls elsewhere in this file.
+  function renderListings() { renderGrid(); }
+
+  // ---------- View tabs (All / Mine / Favorites) ----------
+  const viewAllTab = document.getElementById('viewAllTab');
+  const viewMineTab = document.getElementById('viewMineTab');
+  const viewFavTab = document.getElementById('viewFavTab');
+  function setActiveTab(tab) {
+    [viewAllTab, viewMineTab, viewFavTab].forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+  }
+  viewAllTab.addEventListener('click', () => { currentView = 'all'; setActiveTab(viewAllTab); renderGrid(); });
+  viewMineTab.addEventListener('click', () => { currentView = 'mine'; setActiveTab(viewMineTab); renderGrid(); });
+  viewFavTab.addEventListener('click', () => { currentView = 'favorites'; setActiveTab(viewFavTab); renderGrid(); });
+
+  // ---------- Hero search ----------
+  function updateFilterChip() {
+    const chip = document.getElementById('activeFilterChip');
+    const chipText = document.getElementById('activeFilterText');
+    if (!activeFilter) { chip.style.display = 'none'; return; }
+    const parts = [];
+    if (activeFilter.location) parts.push('"' + activeFilter.location + '"');
+    if (activeFilter.type) parts.push(activeFilter.type);
+    if (activeFilter.minPrice) parts.push('min Rs' + activeFilter.minPrice);
+    if (activeFilter.maxPrice) parts.push('max Rs' + activeFilter.maxPrice);
+    if (activeFilter.amenity) parts.push(activeFilter.amenity);
+    if (!parts.length && (!activeFilter.sort || activeFilter.sort === 'newest')) {
+      chip.style.display = 'none';
+      return;
+    }
+    chipText.textContent = parts.length ? 'Filtering by ' + parts.join(', ') : 'Sorted';
+    chip.style.display = 'inline-block';
+  }
+
+  function applyAllFilters(scrollTo) {
+    const location = document.getElementById('heroSearchLocation').value.trim();
+    const type = document.getElementById('heroSearchType').value;
+    const minPrice = document.getElementById('filterMinPrice').value;
+    const maxPrice = document.getElementById('filterMaxPrice').value;
+    const amenity = document.getElementById('filterAmenity').value;
+    const sort = document.getElementById('sortListings').value;
+
+    if (!location && !type && !minPrice && !maxPrice && !amenity && sort === 'newest') {
+      activeFilter = null;
+    } else {
+      activeFilter = { location, type, minPrice, maxPrice, amenity, sort };
+    }
+    updateFilterChip();
+    currentView = 'all';
+    setActiveTab(viewAllTab);
+    renderGrid();
+    if (scrollTo) document.getElementById('listings').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  document.getElementById('heroSearchBtn').addEventListener('click', () => applyAllFilters(true));
+  document.getElementById('applyFiltersBtn').addEventListener('click', () => applyAllFilters(false));
+
+  document.getElementById('clearFilterBtn').addEventListener('click', (e) => {
+    e.preventDefault();
+    activeFilter = null;
+    document.getElementById('activeFilterChip').style.display = 'none';
+    document.getElementById('heroSearchLocation').value = '';
+    document.getElementById('heroSearchType').value = '';
+    document.getElementById('filterMinPrice').value = '';
+    document.getElementById('filterMaxPrice').value = '';
+    document.getElementById('filterAmenity').value = '';
+    document.getElementById('sortListings').value = 'newest';
+    renderGrid();
+  });
+
+  // ---------- Details modal (gallery, reviews, booking request) ----------
+  const detailsModal = document.getElementById('detailsModal');
+  document.getElementById('detailsModalClose').addEventListener('click', () => detailsModal.classList.remove('open'));
+  detailsModal.addEventListener('click', (e) => { if (e.target === detailsModal) detailsModal.classList.remove('open'); });
+
+  let selectedStars = 0;
+  const starSelect = document.getElementById('starSelect');
+  starSelect.querySelectorAll('span').forEach(star => {
+    star.addEventListener('click', () => {
+      selectedStars = Number(star.dataset.v);
+      starSelect.querySelectorAll('span').forEach(s => s.classList.toggle('active', Number(s.dataset.v) <= selectedStars));
+    });
+  });
+
+  async function openDetailsModal(listing) {
+    const images = getImages(listing);
+    document.getElementById('detailsGallery').innerHTML = images.map(src => `<img src="${src}" alt="${listing.title}">`).join('');
+    document.getElementById('detailsType').textContent = listing.type === 'Room' ? 'Private Room' : listing.type === 'Hostel' ? 'Hostel' : 'Full Home';
+    document.getElementById('detailsTitle').textContent = listing.title + (listing.is_verified ? ' ✓' : '');
+    document.getElementById('detailsLocation').textContent = listing.location;
+    document.getElementById('detailsPrice').textContent = 'Rs ' + Number(listing.price).toLocaleString('en-PK');
+    document.getElementById('detailsDescription').textContent = listing.description || 'No description provided.';
+    document.getElementById('detailsOwner').textContent = listing.owner_name;
+    document.getElementById('detailsViews').textContent = listing.views || 0;
+
+    const amenities = getAmenities(listing);
+    document.getElementById('detailsAmenities').innerHTML = amenities.map(a => '<span class="amenity-tag">' + a + '</span>').join('');
+
+    const waBtn = document.getElementById('detailsWhatsapp');
+    if (listing.contact_phone) {
+      waBtn.href = 'https://wa.me/' + listing.contact_phone + '?text=' + encodeURIComponent('Hi, I saw "' + listing.title + '" on Stayzo and I\'m interested.');
+      waBtn.style.display = 'inline-flex';
+    } else {
+      waBtn.style.display = 'none';
+    }
+
+    document.getElementById('detailsShareBtn').onclick = () => {
+      const url = window.location.origin + window.location.pathname + '?listing=' + listing.id;
+      if (navigator.share) {
+        navigator.share({ title: listing.title, text: 'Check out this listing on Stayzo', url }).catch(() => {});
+      } else {
+        navigator.clipboard.writeText(url).then(() => alert('Link copied to clipboard!'));
+      }
+    };
+
+    document.getElementById('detailsReportBtn').onclick = async () => {
+      if (!currentUser) { openModal('login'); return; }
+      const reason = prompt('Why are you reporting this listing?');
+      if (!reason) return;
+      try {
+        const res = await fetch('/api/reports', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+          body: JSON.stringify({ listing_id: listing.id, reason }),
+        });
+        if (!res.ok) throw new Error();
+        alert('Thanks — this listing has been reported for review.');
+      } catch { alert('Could not submit report.'); }
+    };
+
+    const isOwner = currentUser && currentUser.id === listing.user_id;
+    const bookingSection = document.getElementById('bookingSection');
+    bookingSection.style.display = (currentUser && !isOwner) ? 'block' : 'none';
+    document.getElementById('bookingError').classList.remove('show');
+    document.getElementById('bookingMessage').value = '';
+    document.getElementById('bookingSubmitBtn').onclick = async () => {
+      const errorBox = document.getElementById('bookingError');
+      errorBox.classList.remove('show');
+      try {
+        const res = await fetch('/api/bookings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ listing_id: listing.id, message: document.getElementById('bookingMessage').value }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Could not send request.');
+        document.getElementById('bookingMessage').value = '';
+        alert('Request sent! You can track it under Bookings → Requests sent.');
+      } catch (err) {
+        errorBox.textContent = err.message;
+        errorBox.classList.add('show');
+      }
+    };
+
+    const reviewFormWrap = document.getElementById('reviewFormWrap');
+    reviewFormWrap.style.display = (currentUser && !isOwner) ? 'block' : 'none';
+    selectedStars = 0;
+    starSelect.querySelectorAll('span').forEach(s => s.classList.remove('active'));
+    document.getElementById('reviewComment').value = '';
+    document.getElementById('reviewSubmitBtn').onclick = async () => {
+      if (selectedStars < 1) { alert('Please select a star rating.'); return; }
+      try {
+        const res = await fetch('/api/listings/' + listing.id + '/reviews', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ rating: selectedStars, comment: document.getElementById('reviewComment').value }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Could not save review.');
+        await loadReviewsInto(listing.id);
+        await loadListings();
+      } catch (err) {
+        alert(err.message);
+      }
+    };
+
+    // Similar listings: same type or same city, excluding this one
+    const similarSection = document.getElementById('similarSection');
+    const similarGrid = document.getElementById('similarGrid');
+    const city = listing.location.split(',').pop().trim().toLowerCase();
+    const similar = allListings
+      .filter(l => l.id !== listing.id && (l.type === listing.type || l.location.toLowerCase().includes(city)))
+      .slice(0, 4);
+    if (similar.length) {
+      similarGrid.innerHTML = similar.map(l => {
+        const imgs = getImages(l);
+        return `
+          <div class="listing-card" style="cursor:pointer;" data-similar-id="${l.id}">
+            <div class="listing-img" style="height:120px;">
+              <img src="${imgs[0] || ''}" alt="${l.title}" style="width:100%;height:100%;object-fit:cover;">
+            </div>
+            <div class="listing-body" style="padding:12px;">
+              <h3 style="font-size:14px;">${l.title}</h3>
+              <div class="price"><strong style="font-size:14px;">Rs ${Number(l.price).toLocaleString('en-PK')}</strong></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      similarGrid.querySelectorAll('[data-similar-id]').forEach(card => {
+        card.addEventListener('click', () => {
+          const l = allListings.find(x => x.id === Number(card.dataset.similarId));
+          if (l) openDetailsModal(l);
+        });
+      });
+      similarSection.style.display = 'block';
+    } else {
+      similarSection.style.display = 'none';
+    }
+
+    await loadReviewsInto(listing.id);
+    fetch('/api/listings/' + listing.id + '/view', { method: 'POST' }).catch(() => {});
+    detailsModal.classList.add('open');
+    history.replaceState(null, '', window.location.pathname + '?listing=' + listing.id);
+  }
+
+  function maybeOpenFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('listing');
+    if (!id) return;
+    const listing = allListings.find(l => l.id === Number(id));
+    if (listing) openDetailsModal(listing);
+  }
+
+  document.getElementById('detailsModalClose').addEventListener('click', () => {
+    history.replaceState(null, '', window.location.pathname);
+  });
+
+  async function loadReviewsInto(listingId) {
+    const listEl = document.getElementById('reviewsList');
+    const lineEl = document.getElementById('detailsRatingLine');
+    try {
+      const res = await fetch('/api/listings/' + listingId + '/reviews');
+      const data = await res.json();
+      const reviews = data.reviews || [];
+      lineEl.textContent = reviews.length ? '(' + reviews.length + ' review' + (reviews.length > 1 ? 's' : '') + ')' : '';
+      listEl.innerHTML = reviews.length
+        ? reviews.map(r => `
+            <div class="review-item">
+              <span class="rname">${r.reviewer_name}</span>
+              <span class="rating-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</span>
+              ${r.comment ? '<p>' + r.comment + '</p>' : ''}
+            </div>
+          `).join('')
+        : '<p style="color:#9096A6;font-size:13.5px;">No reviews yet — be the first to share your experience.</p>';
+    } catch {
+      listEl.innerHTML = '<p style="color:#9096A6;font-size:13.5px;">Could not load reviews.</p>';
+    }
+  }
+
+  // ---------- Bookings modal ----------
+  const bookingsModal = document.getElementById('bookingsModal');
+  document.getElementById('bookingsBtn').addEventListener('click', (e) => {
+    e.preventDefault();
+    if (!currentUser) { openModal('login'); return; }
+    bookingsModal.classList.add('open');
+    loadBookingsReceived();
+    loadBookingsSent();
+  });
+  document.getElementById('bookingsModalClose').addEventListener('click', () => bookingsModal.classList.remove('open'));
+  bookingsModal.addEventListener('click', (e) => { if (e.target === bookingsModal) bookingsModal.classList.remove('open'); });
+
+  const bTabReceived = document.getElementById('bTabReceived');
+  const bTabSent = document.getElementById('bTabSent');
+  const bookingsReceivedPanel = document.getElementById('bookingsReceivedPanel');
+  const bookingsSentPanel = document.getElementById('bookingsSentPanel');
+  bTabReceived.addEventListener('click', () => {
+    bTabReceived.classList.add('active'); bTabSent.classList.remove('active');
+    bookingsReceivedPanel.style.display = 'block'; bookingsSentPanel.style.display = 'none';
+  });
+  bTabSent.addEventListener('click', () => {
+    bTabSent.classList.add('active'); bTabReceived.classList.remove('active');
+    bookingsSentPanel.style.display = 'block'; bookingsReceivedPanel.style.display = 'none';
+  });
+
+  function statusClass(status) {
+    return status === 'accepted' ? 'status-accepted' : status === 'declined' ? 'status-declined' : 'status-pending';
+  }
+
+  async function loadBookingsReceived() {
+    bookingsReceivedPanel.innerHTML = '<p style="color:#9096A6;font-size:13.5px;">Loading…</p>';
+    try {
+      const res = await fetch('/api/bookings/received', { credentials: 'include' });
+      const data = await res.json();
+      const bookings = data.bookings || [];
+      if (bookings.length === 0) {
+        bookingsReceivedPanel.innerHTML = '<p style="color:#9096A6;font-size:13.5px;">No booking requests yet on your listings.</p>';
+        return;
+      }
+      bookingsReceivedPanel.innerHTML = bookings.map(b => `
+        <div class="booking-item">
+          <strong>${b.title}</strong> — from ${b.renter_name} (${b.renter_email})
+          <span class="status ${statusClass(b.status)}">${b.status}</span>
+          ${b.message ? '<p style="margin-top:6px;color:#4A5066;">' + b.message + '</p>' : ''}
+          ${b.status === 'pending' ? `
+            <div class="booking-actions">
+              <button class="btn-accept" data-id="${b.id}" data-action="accepted">Accept</button>
+              <button class="btn-decline" data-id="${b.id}" data-action="declined">Decline</button>
+            </div>
+          ` : ''}
+        </div>
+      `).join('');
+
+      bookingsReceivedPanel.querySelectorAll('button[data-action]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          await fetch('/api/bookings/' + btn.dataset.id, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ status: btn.dataset.action }),
+          });
+          loadBookingsReceived();
+        });
+      });
+    } catch {
+      bookingsReceivedPanel.innerHTML = '<p style="color:#9096A6;font-size:13.5px;">Could not load requests.</p>';
+    }
+  }
+
+  async function loadBookingsSent() {
+    bookingsSentPanel.innerHTML = '<p style="color:#9096A6;font-size:13.5px;">Loading…</p>';
+    try {
+      const res = await fetch('/api/bookings/mine', { credentials: 'include' });
+      const data = await res.json();
+      const bookings = data.bookings || [];
+      bookingsSentPanel.innerHTML = bookings.length
+        ? bookings.map(b => `
+            <div class="booking-item">
+              <strong>${b.title}</strong> — ${b.location}
+              <span class="status ${statusClass(b.status)}">${b.status}</span>
+              ${b.message ? '<p style="margin-top:6px;color:#4A5066;">' + b.message + '</p>' : ''}
+            </div>
+          `).join('')
+        : '<p style="color:#9096A6;font-size:13.5px;">You haven&#39;t sent any booking requests yet.</p>';
+    } catch {
+      bookingsSentPanel.innerHTML = '<p style="color:#9096A6;font-size:13.5px;">Could not load your requests.</p>';
+    }
+  }
+
+  // ---------- Dark mode ----------
+  const themeToggle = document.getElementById('themeToggle');
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+    localStorage.setItem('stayzo-theme', theme);
+  }
+  applyTheme(localStorage.getItem('stayzo-theme') || 'light');
+  themeToggle.addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    applyTheme(current);
+  });
+
+  // ---------- Reports (admin) ----------
+  const reportsModal = document.getElementById('reportsModal');
+  document.getElementById('reportsBtn').addEventListener('click', (e) => {
+    e.preventDefault();
+    reportsModal.classList.add('open');
+    loadReports();
+  });
+  document.getElementById('reportsModalClose').addEventListener('click', () => reportsModal.classList.remove('open'));
+  reportsModal.addEventListener('click', (e) => { if (e.target === reportsModal) reportsModal.classList.remove('open'); });
+
+  async function loadReports() {
+    const panel = document.getElementById('reportsPanel');
+    panel.innerHTML = '<p style="color:#9096A6;font-size:13.5px;">Loading…</p>';
+    try {
+      const res = await fetch('/api/reports', { credentials: 'include' });
+      const data = await res.json();
+      const reports = data.reports || [];
+      if (reports.length === 0) {
+        panel.innerHTML = '<p style="color:#9096A6;font-size:13.5px;">No reports so far.</p>';
+        return;
+      }
+      panel.innerHTML = reports.map(r => `
+        <div class="booking-item">
+          <strong>${r.title}</strong> — reported by ${r.reporter_name}
+          <p style="margin-top:6px;color:#4A5066;">${r.reason}</p>
+          <div class="booking-actions">
+            <button class="btn-decline" data-id="${r.listing_id}">Delete listing</button>
+          </div>
+        </div>
+      `).join('');
+      panel.querySelectorAll('button[data-id]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (!confirm('Delete this reported listing?')) return;
+          await fetch('/api/listings/' + btn.dataset.id, { method: 'DELETE', credentials: 'include' });
+          await loadListings();
+          loadReports();
+        });
+      });
+    } catch {
+      panel.innerHTML = '<p style="color:#9096A6;font-size:13.5px;">Could not load reports.</p>';
+    }
+  }
+
+  // ---------- Map view (free OpenStreetMap + Nominatim geocoding, no API key needed) ----------
+  const mapViewEl = document.getElementById('mapView');
+  const toggleMapBtn = document.getElementById('toggleMapBtn');
+  let leafletMap = null;
+  let mapMarkersLayer = null;
+  const geocodeCache = {};
+  let mapVisible = false;
+
+  async function geocodeLocation(location) {
+    if (geocodeCache[location]) return geocodeCache[location];
+    try {
+      const res = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(location + ', Pakistan'));
+      const data = await res.json();
+      if (data && data[0]) {
+        const coords = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+        geocodeCache[location] = coords;
+        return coords;
+      }
+    } catch { /* ignore geocoding failures for individual listings */ }
+    return null;
+  }
+
+  async function renderMap() {
+    if (!leafletMap) {
+      leafletMap = L.map('mapView').setView([30.3753, 69.3451], 5); // Pakistan center
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+      }).addTo(leafletMap);
+      mapMarkersLayer = L.layerGroup().addTo(leafletMap);
+    }
+    mapMarkersLayer.clearLayers();
+
+    const visible = applyFiltersAndView(allListings).slice(0, 25); // keep geocoding calls reasonable
+    const bounds = [];
+    for (const listing of visible) {
+      const coords = await geocodeLocation(listing.location);
+      if (!coords) continue;
+      bounds.push([coords.lat, coords.lng]);
+      const marker = L.marker([coords.lat, coords.lng]).addTo(mapMarkersLayer);
+      marker.bindPopup(`
+        <div class="map-popup">
+          <h4>${listing.title}</h4>
+          <div class="price">Rs ${Number(listing.price).toLocaleString('en-PK')}/mo</div>
+          <button onclick="document.querySelector('[data-view-from-map=\\'${listing.id}\\']').click()" style="margin-top:6px;font-size:12px;">View details</button>
+          <span data-view-from-map="${listing.id}" style="display:none;"></span>
+        </div>
+      `);
+      marker.on('popupopen', () => {
+        const el = document.querySelector('[data-view-from-map="' + listing.id + '"]');
+        if (el) el.onclick = () => openDetailsModal(listing);
+        const btn = marker.getPopup().getElement()?.querySelector('button');
+        if (btn) btn.onclick = () => openDetailsModal(listing);
+      });
+    }
+    if (bounds.length) leafletMap.fitBounds(bounds, { padding: [30, 30] });
+    setTimeout(() => leafletMap.invalidateSize(), 200);
+  }
+
+  toggleMapBtn.addEventListener('click', () => {
+    mapVisible = !mapVisible;
+    mapViewEl.style.display = mapVisible ? 'block' : 'none';
+    toggleMapBtn.textContent = mapVisible ? '📋 List view' : '🗺 Map view';
+    if (mapVisible) renderMap();
+  });
+
+  loadListings();
+</script>
+
+</body>
+</html>
